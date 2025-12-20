@@ -1,0 +1,43 @@
+#!/bin/sh
+
+# Red Hat Linux VNC session startup script
+export LANG
+export SYSFONT
+unset SESSION_MANAGER
+unset DBUS_SESSION_BUS_ADDRESS
+
+# Picks the "older" GNOME desktop, where right click on desktop shows "terminal" menu.
+export GNOME_SHELL_SESSION_MODE=classic
+
+# Blocked "xinitrc" cause that will start gnome.
+[ -x /etc/X11/xinit/xinitrc ] && exec /etc/X11/xinit/xinitrc
+
+#[ -x /etc/vnc/xstartup ] && exec /etc/vnc/xstartup
+#[ -r $HOME/.Xresources ] && xrdb $HOME/.Xresources
+
+##!!xsetroot -solid grey
+
+##!!vncconfig -iconic &
+#vncconfig -nowin &
+
+# NOTE: Centos 6 uses '/usr/bin/' directory.
+# NOTE: Currently block kde from Centos 6.
+# Can customize starting console size & position: (COLSxROWS+X+Y)
+#if [ -f /bin/mate-session ]; then
+#    mate-terminal --geometry 90x40-0+75 &
+#    mate-session &
+##elif [ -f /bin/startkde ] || [ -f /usr/bin/startkde ]; then
+#elif [ -f /bin/startkde ] ; then
+#    konsole --geometry 90x40-0+75 &
+#    startkde &
+#elif [ -f /bin/gnome-session ] || [ -f /usr/bin/gnome-session ]; then
+if [ -f /bin/gnome-session ] || [ -f /usr/bin/gnome-session ]; then
+    gnome-terminal --geometry 90x40-0+75 &
+    gnome-session &
+elif [ -f /usr/dt/bin/dtwm ]; then
+    xterm -geometry 80x24+10+10 -ls -title "$VNCDESKTOP Desktop" &
+    /usr/dt/bin/dtwm &
+else
+    twm &
+fi
+
