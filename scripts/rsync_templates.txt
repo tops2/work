@@ -1,0 +1,61 @@
+## SYNC HCHU --> Milpitas /prj/dram/k095/sch_hchu
+
+BKLOG=/prj/dram/k095/rsync_Milpitas/SCH/rsynclog_hchu_to_Milpitas.`date +%Y%m`
+echo "START***************************************************************************" > $BKLOG
+/bin/date >> $BKLOG
+
+
+
+## Flash project backup at tapeout
+/usr/bin/rsync -avn --stats --delete --exclude-from '/home/dpeng/SCRIPTS/rsync-exclude-list.txt' /flash1/fmu647a2 /product/
+
+## Flash remove write permission
+sudo chmod -R ugo-w /product/fmu647a2
+
+## Flash check/confirm project backup at tapeout
+sudo /usr/bin/rsync -avn --no-perms --no-owner --no-group --no-times --stats --delete --exclude-from '/home/dpeng/SCRIPTS/rsync-exclude-list.txt' /flash1/fmu647a2 /product/
+
+
+## Flash check for write files at tapeout (check only files and not "links")
+sudo find /product/fmu647a2 -perm /ugo=w -type f
+
+
+# Rsync while excluding ".mozilla" and ".nfs*" files.
+/usr/bin/rsync -avz --stats --delete --exclude=".mozilla" --exclude=".nfs*" --delete-excluded 192.168.16.131:/msa2040/us01/3/ /us20/3/
+
+/usr/bin/rsync -avz --stats --delete --exclude-from '/home/dpeng/SCRIPTS/rsync-exclude-list.txt' -a --chmod=ug=rwx,o=rx /prj/dram/k095/sch_hchu/f25_std/ 192.168.16.1::k095_sch_hchu/f25_std/ >> $BKLOG
+
+
+
+/bin/date >> $BKLOG
+echo "END*****************************************************************************" >> $BKLOG
+
+
+sudo rsync -avn --stats --delete --exclude-from '/home/dpeng/SCRIPTS/rsync-exclude-list.txt' -a --chmod=ug=rx /flash1/fmu127a0/ /product/fmu127a0/ >> $BKLOG
+
+
+# NOTE: rsync with creating hardlinks (--link-dest) for same files. Useful to save space for things like periodic backups.
+# NOTE: --link-dest=./20220915 : When using relative path, the listed directory is relative to the destination path.
+
+
+# MAIN Monthly backup for FLASH (bksrv->us14): Copy to server
+## This should create hardlinks to the previous month for unchanged files. Should see reduction starting next month.
+sudo rsync -avn --stats --delete --exclude-from '/user/dpeng/SCRIPTS/rsync-exclude-list-minimal.txt' --link-dest=/msa2040/FLASH/20250815 bksrv:/Mon/ /msa2040/FLASH/20250915/
+sudo rsync -avn --stats --delete --exclude-from '/user/dpeng/SCRIPTS/rsync-exclude-list-minimal.txt' --link-dest=/msa2040/FLASH/20250915 bksrv:/Wed/ /msa2040/FLASH/20251015/
+sudo rsync -avn --stats --delete --exclude-from '/user/dpeng/SCRIPTS/rsync-exclude-list-minimal.txt' --link-dest=/msa2040/FLASH/20251015 bksrv:/Fri/ /msa2040/FLASH/20251114/
+sudo rsync -avn --stats --delete --exclude-from '/user/dpeng/SCRIPTS/rsync-exclude-list-minimal.txt' --link-dest=/msa2040/FLASH/20251114 bksrv:/Mon/ /msa2040/FLASH/20251215/
+
+
+# Monthly backup for FLASH (us14->us14): Moving data to physical hard drive
+sudo rsync -avn --stats --delete --exclude-from '/user/dpeng/SCRIPTS/rsync-exclude-list-minimal.txt' 20211020 /dp1/
+
+# Month backup for FLASH (us14->usde17): Moving data to physical hard drive
+time sudo rsync -avn --stats --delete --progress us14:/msa2040/FLASH/20250815 /dp/FLASH/
+
+# Month backup for MEMORY (bkus01->pmc108): Moving data to physical hard drive
+time sudo rsync -avn --stats --delete --progress --exclude-from '/user/dpeng/SCRIPTS/rsync-exclude-list-minimal.txt' --link-dest=/dp2/MEMORY/20250812 bkus01:/Mon/ /dp2/MEMORY/20250812/
+time sudo rsync -avn --stats --delete --progress --exclude-from '/user/dpeng/SCRIPTS/rsync-exclude-list-minimal.txt' --link-dest=/dp/MEMORY/20250915 bkus01:/Fri/ /dp/MEMORY/20251017/
+time sudo rsync -avn --stats --delete --progress --exclude-from '/user/dpeng/SCRIPTS/rsync-exclude-list-minimal.txt' --link-dest=/dp/MEMORY/20251017 bkus01:/Fri/ /dp/MEMORY/20251114/
+time sudo rsync -avn --stats --delete --progress --exclude-from '/user/dpeng/SCRIPTS/rsync-exclude-list-minimal.txt' --link-dest=/dp/MEMORY/20251114 bkus01:/Mon/ /dp/MEMORY/20251215/
+
+

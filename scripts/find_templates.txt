@@ -1,0 +1,70 @@
+## Finding simulation output files.
+##!!**EXCLUDE *.pa**  sudo find . -type f \( -name "*.conn*" -o -name "*.dsn" -o -name "*.tr[n0-9]*" -o -name "*.out.*" -o -name "*.fsdb*" -o -name "*.pa*" -o -name "*.st0*" -o -name "*.wdf*" -o -name "*.sw*" -o -name "*.out" \) -ls
+sudo find . -type f \( -name "*.conn*" -o -name "*.dsn" -o -name "*.tr[n0-9]*" -o -name "*.out.*" -o -name "*.fsdb*" -o -name "*.st0*" -o -name "*.wdf*" -o -name "*.sw*" -o -name "*.out" \) -ls
+
+
+## Finding and DELETING simulation output files.
+## Use above format but replace "-ls" with below to delete.
+-exec /bin/rm '{}' \;
+
+
+## Finding directories and deleting
+find /dir/to/search/ -type d -name "dirName" -exec rm -rf {} +
+find /dir/to/search/ -type d -name "dirName" -exec rm -rf \;
+
+
+
+
+
+## Finding Calibre XRC output files.
+sudo find . -type f \( -name "svrf" -o -name "*.pxi*" -o -name "xrc.rep" -o -name "net.dist*" -o -name "dist.rep*" -o -name "*.log*" \) -ls
+
+
+## Finding and DELETING Calibre XRC output files.
+## Use above format but replace "-ls" with below to delete.
+-exec /bin/rm '{}' \;
+
+
+## Gzip
+*.spi
+*.db
+*.gds
+*.log*
+*.lumped*
+
+
+
+
+
+## Finding simulation output files.
+sudo find . -type d -name "BK*2016"
+sudo find . -type d -name "BK*Jan2023" -exec /bin/rm -r '{}' \;
+
+sudo find . -type d \( -name "BK**2017" -o -name "BK*F*2017" -o -name "BK*M*2017" -o -name "BK*A*2017" \)
+sudo find . -maxdepth 4 -type d \( -name "BK*2020" -o -name "BK*2021" -o -name "BK*Sep2022" -o -name "BK*Jan2023" -o -name "BK*Feb2023" -o -name "BK*Mar2023" -o -name "BK*Apr2023" -o -name "BK*May2023" \) -exec /bin/rm -r '{}' \;
+sudo find . -maxdepth 4 -type d \( -name "BK*Jun2023" -o -name "BK*Jul2023" -o -name "BK*Aug2023" -o -name "BK*Sep2023" -o -name "BK*Oct2023" -o -name "BK*Nov2023" -o -name "BK*Dec2023" \) -exec /bin/rm -r '{}' \;
+sudo find . -maxdepth 4 -type d \( -name "BK*Mar2024" -o -name "BK*Apr2024" \) -exec /bin/rm -r '{}' \;
+sudo find . -maxdepth 5 -type d \( -name "BK*Jan2024" -o -name "BK*Feb2024" -o -name "BK*Mar2024" -o -name "BK*Apr2024" -o -name "BK*May2024" -o -name "BK*Jun2024" -o -name "BK*Jul2024" -o -name "BK*Aug2024" -o -name "BK*Sep2024" -o -name "BK*Oct2024" -o -name "BK*Nov2024" \) -exec /bin/rm -r '{}' \;
+
+
+
+## Finding files owned by user.
+sudo find andrej -user rjy -ls
+sudo find andrej -user rjy -exec /bin/chown rjy '{}' \;
+sudo find . -uid 173 -exec /bin/chown rjy '{}' \;
+sudo find . -user rjy -exec /bin/chmod g+rwx '{}' \;
+sudo find . -user rjy -exec /bin/chown zico '{}' \;
+
+
+
+
+## Finding files owned by user.
+### Find modified less than -8 days ago
+sudo find . -mtime -8
+
+### Find modified less than -8 days ago
+sudo find . -mtime +8
+
+
+
+
