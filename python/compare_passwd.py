@@ -103,18 +103,32 @@ def main():
             for username, filepath in entries:
                 conflict_rows.append((uid, username, filepath, conflict_type))
 
+    output_lines = []
+
     if not conflict_rows:
-        print("No conflicting UIDs found.")
-        return
+        output_lines.append("No conflicting UIDs found.")
+    else:
+        # Sort by UID ascending; stable sort preserves original entry order within same UID.
+        conflict_rows.sort(key=lambda row: row[0])
 
-    # Sort by UID ascending; stable sort preserves original entry order within same UID.
-    conflict_rows.sort(key=lambda row: row[0])
+        # Build Markdown table.
+        output_lines.append("| UID | Username | File | Conflict Type |")
+        output_lines.append("|-----|----------|------|----------------|")
+        for uid, username, filepath, conflict_type in conflict_rows:
+            output_lines.append(f"| {uid} | {username} | {filepath} | {conflict_type} |")
 
-    # Print Markdown table.
-    print("| UID | Username | File | Conflict Type |")
-    print("|-----|----------|------|----------------|")
-    for uid, username, filepath, conflict_type in conflict_rows:
-        print(f"| {uid} | {username} | {filepath} | {conflict_type} |")
+    report = "\n".join(output_lines)
+
+    # Print to stdout.
+    print(report)
+
+    # Also write to conflict_uid.md.
+    output_filename = "conflict_uid.md"
+    try:
+        with open(output_filename, "w") as f:
+            f.write(report + "\n")
+    except OSError as e:
+        print(f"Warning: could not write to {output_filename} ({e})", file=sys.stderr)
 
 
 if __name__ == "__main__":
