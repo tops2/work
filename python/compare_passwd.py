@@ -16,9 +16,11 @@ from collections import defaultdict
 
 # Hardcoded fallback file list, used only when no CLI arguments are given.
 DEFAULT_FILES = [
-    "./passwd",
+    "./passwd_centos610",
     "./passwd_usde14",
     "./passwd_master",
+    "./passwd_alma810",
+    "./passwd_alma98",
 ]
 
 
@@ -31,21 +33,33 @@ def parse_passwd_line(line, filename, line_num):
     stripped = line.strip()
 
     if not stripped:
-        print(f"Warning: skipping blank line in {filename}:{line_num}", file=sys.stderr)
+        print(
+            f"Warning: skipping blank line in {filename}:{line_num}",
+            file=sys.stderr,
+        )
         return None
 
     if stripped.startswith("#"):
-        print(f"Warning: skipping comment line in {filename}:{line_num}", file=sys.stderr)
+        print(
+            f"Warning: skipping comment line in {filename}:{line_num}",
+            file=sys.stderr,
+        )
         return None
 
     if stripped.startswith("+") or stripped.startswith("-"):
-        print(f"Warning: skipping NIS include/exclude line in {filename}:{line_num}", file=sys.stderr)
+        print(
+            f"Warning: skipping NIS include/exclude line in {filename}:{line_num}",
+            file=sys.stderr,
+        )
         return None
 
     fields = stripped.split(":")
 
     if len(fields) < 3:
-        print(f"Warning: skipping malformed line (too few fields) in {filename}:{line_num}", file=sys.stderr)
+        print(
+            f"Warning: skipping malformed line (too few fields) in {filename}:{line_num}",
+            file=sys.stderr,
+        )
         return None
 
     username = fields[0]
@@ -54,7 +68,10 @@ def parse_passwd_line(line, filename, line_num):
     try:
         uid = int(uid_str)
     except ValueError:
-        print(f"Warning: skipping malformed line (non-numeric UID) in {filename}:{line_num}", file=sys.stderr)
+        print(
+            f"Warning: skipping malformed line (non-numeric UID) in {filename}:{line_num}",
+            file=sys.stderr,
+        )
         return None
 
     return (uid, username)
@@ -74,7 +91,9 @@ def read_passwd_file(filepath):
                     uid, username = result
                     records.append((uid, username, filepath))
     except OSError as e:
-        print(f"Warning: cannot open {filepath} ({e}), skipping", file=sys.stderr)
+        print(
+            f"Warning: cannot open {filepath} ({e}), skipping", file=sys.stderr
+        )
         return []
 
     return records
@@ -102,14 +121,14 @@ def main():
     for uid, entries in uid_groups.items():
         if len(entries) > 1:
             usernames = {username for username, _ in entries}
-            uid_group_same_user[uid] = (len(usernames) == 1)
+            uid_group_same_user[uid] = len(usernames) == 1
 
     # Precompute, per username group with a conflict, whether all UIDs match.
     username_group_same_uid = {}  # username -> True (Same UID) / False (Different UID)
     for username, entries in username_groups.items():
         if len(entries) > 1:
             uids = {uid for uid, _ in entries}
-            username_group_same_uid[username] = (len(uids) == 1)
+            username_group_same_uid[username] = len(uids) == 1
 
     # Build combined conflict rows: include a record if it has a UID conflict
     # OR a username conflict (union), with four checkmark columns.
@@ -123,10 +142,24 @@ def main():
 
         same_user = has_uid_conflict and uid_group_same_user[uid]
         diff_user = has_uid_conflict and not uid_group_same_user[uid]
-        same_uid_flag = has_username_conflict and username_group_same_uid[username]
-        diff_uid_flag = has_username_conflict and not username_group_same_uid[username]
+        same_uid_flag = (
+            has_username_conflict and username_group_same_uid[username]
+        )
+        diff_uid_flag = (
+            has_username_conflict and not username_group_same_uid[username]
+        )
 
-        conflict_rows.append((uid, username, filepath, same_user, diff_user, same_uid_flag, diff_uid_flag))
+        conflict_rows.append(
+            (
+                uid,
+                username,
+                filepath,
+                same_user,
+                diff_user,
+                same_uid_flag,
+                diff_uid_flag,
+            )
+        )
 
     output_lines = []
 
@@ -140,9 +173,21 @@ def main():
             return "\u2713" if flag else ""
 
         # Build Markdown table.
-        output_lines.append("| UID | Username | File | Same User | Different User | Same UID | Different UID |")
-        output_lines.append("|-----|----------|------|-----------|-----------------|----------|----------------|")
-        for uid, username, filepath, same_user, diff_user, same_uid_flag, diff_uid_flag in conflict_rows:
+        output_lines.append(
+            "| UID | Username | File | Same User | Different User | Same UID | Different UID |"
+        )
+        output_lines.append(
+            "|-----|----------|------|-----------|-----------------|----------|----------------|"
+        )
+        for (
+            uid,
+            username,
+            filepath,
+            same_user,
+            diff_user,
+            same_uid_flag,
+            diff_uid_flag,
+        ) in conflict_rows:
             output_lines.append(
                 f"| {uid} | {username} | {filepath} "
                 f"| {mark(same_user)} | {mark(diff_user)} | {mark(same_uid_flag)} | {mark(diff_uid_flag)} |"
@@ -159,7 +204,10 @@ def main():
         with open(output_filename, "w") as f:
             f.write(report + "\n")
     except OSError as e:
-        print(f"Warning: could not write to {output_filename} ({e})", file=sys.stderr)
+        print(
+            f"Warning: could not write to {output_filename} ({e})",
+            file=sys.stderr,
+        )
 
 
 if __name__ == "__main__":
