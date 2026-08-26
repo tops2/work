@@ -18,22 +18,36 @@
 ;;  1. dbOpenCellViewByType(...) mode string "a" is my best
 ;;     understanding for "open existing cellview for edit without
 ;;     erasing it." Please confirm this doesn't blank the view.
-;;  2. inst~>libName = newLib -- I cannot confirm from documentation
-;;     that this cleanly re-binds the instance master vs. just
-;;     changing a display string with a stale cached pointer. Test
-;;     this specifically: reassign, save, close, reopen, and check
-;;     the instance is genuinely "broken" (referencing new lib name)
-;;     rather than corrupted.
+;;  2. inst~>libName = newLib
+;;     Can't directly assign library names. Need to use
+;;     `dbSetInstHeaderMasterName` and set to valid library name.
 ;;  3. Pcell instances are NOT special-cased -- they'll go through
 ;;     the same libName reassignment as any other instance. Per your
 ;;     note, this is being ignored for now, but flagging it here so
 ;;     it's not forgotten if a pcell shows up in scanned libraries.
+;;
+;; USAGE
+;; - Rename to new library in `cds.lib`. Modify `srcLibs` for the new library
+;;   name to scan. Need to have new library to exist for SKILL to work.
+;; - Modify `libMap` table for *old libName* to *new libName*
+;; - Hard code to do a dry run first or actual renaming.
+;;
+;; TODO
+;; - Need to check about closing cell. Currently still shows user checking out
+;;   cellview.
+;;
+
+;;
 ;; ============================================================================
 
 ;; HISTORY
 ;; 2026/08/24 - dpeng
 ;; - Initial creation based on Claude and Cadence support site.
+;; - Use `dbSetInstHeaderMasterName` to set the library name. All examples uses
+;;   instHeaders from opened cells instead of `inst`.
 ;;
+;; 2026/08/25 - dpeng
+;; - Adding USAGE section.
 ;;
 ;; ============================================================================
 
@@ -82,18 +96,25 @@ procedure(CCSreplaceLibRefs(libMap srcLibs viewList @optional (dryRun t))
               let((instChangedThisCV)
                 instChangedThisCV = 0
 
-                ;foreach(inst cv~>instances
-                foreach(inst cv~>instHeaders
-                  newLib = libMap[inst~>libName]
+                ; Going through each instance in cellview
+                foreach(instHeader cv~>instHeaders
+                  newLib = libMap[instHeader~>libName]
                   when(newLib
-                    printf("  %s %s %s : inst %s  %s -> %s%s\n"
+                    printf("  %s %s %s : instHeader %s  %s -> %s%s\n"
                            lib cellName viewName
-                           inst~>name inst~>libName newLib
+                           instHeader~>cellName instHeader~>libName newLib
                            if(dryRun " (dry-run)" ""))
                     unless(dryRun
-                      inst~>libName = newLib
-                      ;; NOTE: Need to use either:
-                      ;; dbSetInstHeaderMasterName
+                      ;;inst~>libName = newLib
+                      ;; NOTE: Can't directly assign something like:
+                      ;; instHeader~>libName = newLib
+                      ;; NOTE: Only successful rename if library exists.
+                      dbSetInstHeaderMasterName(
+                        instHeader
+                        newLib
+                        nil
+                        nil
+                      )
                     )
                     instChangedThisCV = instChangedThisCV + 1
                     totalChanged = totalChanged + 1
@@ -133,6 +154,8 @@ procedure(CCSreplaceLibRefs(libMap srcLibs viewList @optional (dryRun t))
 
 procedure(CCSRunReplaceLibRefs()
     let((libMap srcLibs viewList)
+
+        ; USER: Edit for *old name* vs *new name*
 		libMap = makeTable("libMap" nil)
 		libMap["cgnd"] = "cgnd_revc"
 		libMap["vbb"] = "vbb_revc"
@@ -166,17 +189,36 @@ procedure(CCSRunReplaceLibRefs()
 		libMap["xvddq"] = "xvddq_revc"
 		libMap["xvss"] = "xvss_revc"
 		libMap["xvssl"] = "xvssl_revc"
-		;; ... up to your ~32-33 entries
 
-		srcLibs  = list( "vbb" )   ;; libraries to scan cells in
-		;srcLibs  = list( "cgnd" "vbb" "vbbsa" "vbleq_0" "vbleq_1" "vcc" )   ;; libraries to scan cells in
-		viewList = list("layout")                ;; or list("layout" "schematic")
+		; USER: Edit for libraries to look at.
+		;srcLibs  = list( "vbb_revc" )   ;; libraries to scan cells in
+		;srcLibs  = list( "vbbsa_revc" )   ;; libraries to scan cells in
+		;srcLibs  = list( "vbleq_0_revc" )   ;; libraries to scan cells in
+		srcLibs  = list( "vbleq_1_revc" "vbleq_1_revc" )   ;; libraries to scan cells in
+		;srcLibs  = list(
+    	;	"cgnd_revc"
+    	;	"vbb_revc" "vbbsa_revc" "vbleq_0_revc" "vbleq_1_revc"
+    	;	"vcc_revc" "vccckt_revc" "vccdll_revc" "vccdllc_revc"
+    	;	"vcsa_revc"
+    	;	"vdd_revc" "vdda_revc" "vddl_revc" "vddq_revc" "vdin_revc" "vdin_dq_revc"
+    	;	"vkk_revc" "vod_revc" "vpl_revc" "vpp_revc" "vsin_revc"
+    	;	"vsin_dq_revc" "vss_revc" "vssckt_revc" "vssdll_revc" "vssdllc_revc" "vssl_revc" "xvdd_revc"
+    	;	"xvddl_revc" "xvddq_revc"
+    	;	"xvss_revc" "xvssl_revc"
+		;)   ;; libraries to scan cells in
 
+
+		; USER: Edit for specific cell view type.
+		;viewList = list("layout")
+		;viewList = list("schematic")
+		viewList = list("layout" "schematic" "symbol")
+
+		; USER: Edit for "dry run" vs execute for real.
 		;; Step 1: dry run, just review the printed report
-		;CCSreplaceLibRefs(libMap srcLibs viewList t)
+		CCSreplaceLibRefs(libMap srcLibs viewList t)
 
 		;; Step 2: once you're satisfied, execute for real
-		CCSreplaceLibRefs(libMap srcLibs viewList nil)
+		;CCSreplaceLibRefs(libMap srcLibs viewList nil)
     ) ; let
 ) ; procedure CCSRunReplaceLibRefs
 
