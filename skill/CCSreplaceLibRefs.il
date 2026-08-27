@@ -77,7 +77,7 @@
 ;;
 ;; ============================================================================
 
-
+; Create a unique list
 procedure(CCSuniqueList(lst)
     let((seen result)
         seen = makeTable("CCSuniqueSeen" nil)
@@ -90,8 +90,10 @@ procedure(CCSuniqueList(lst)
         )
         reverse(result)
     )
-)
+) ; END: CCSuniqueList
 
+
+; Replaces the old library with new library names.
 procedure(CCSreplaceLibRefs(libMap srcLibs viewList @optional (dryRun t))
     let((libObj cellNames cv newLib totalChanged totalOpened totalSkipped
               totalFailed uniqSrcLibs uniqViews mode missingLibs shouldRun)
@@ -169,31 +171,36 @@ procedure(CCSreplaceLibRefs(libMap srcLibs viewList @optional (dryRun t))
 
                                             if(dryRun then
                                                 printf("  %s %s %s : instHeader %s  %s -> %s (dry-run)\n"
-                                                              lib cellName viewName
-                                                              cellLabel oldLibLabel newLib)
+                                                    lib cellName viewName
+                                                    cellLabel oldLibLabel newLib)
                                                 instChangedThisCV = instChangedThisCV + 1
                                                 totalChanged = totalChanged + 1
                                             else
+
+                                                ; errset to capture in case of error for setting name.
+                                                ; `dbSetInstHeaderMasterName` is actual function that changes names.
                                                 setResult = errset(dbSetInstHeaderMasterName(instHeader newLib nil nil))
                                                 if(setResult then
                                                     printf("  %s %s %s : instHeader %s  %s -> %s\n"
-                                                                  lib cellName viewName
-                                                                  cellLabel oldLibLabel newLib)
+                                                        lib cellName viewName
+                                                        cellLabel oldLibLabel newLib)
                                                     instChangedThisCV = instChangedThisCV + 1
                                                     totalChanged = totalChanged + 1
                                                 else
                                                     warn("Could not set master to '%s' for instHeader (was '%s') in %s %s %s\n"
-                                                              newLib oldLibLabel lib cellName viewName)
+                                                        newLib oldLibLabel lib cellName viewName)
                                                     totalFailed = totalFailed + 1
                                                 )
                                             )
                                         )
-                                    )
+                                    ) ; END: foreach: cv~>instHeaders
 
                                     if(and(!dryRun instChangedThisCV > 0) then
                                         dbSave(cv)
                                     )
-                                )
+                                ) ; END: let
+
+                                ; Reopen cell as "read only" to for getting rid of *.cdslck file.
                                 dbReopen(cv "r")
                                 dbClose(cv)
 
@@ -203,9 +210,9 @@ procedure(CCSreplaceLibRefs(libMap srcLibs viewList @optional (dryRun t))
                                 totalSkipped = totalSkipped + 1
                                 warn("Could not open %s %s %s -- skipping (missing view or locked)\n"
                                           lib cellName viewName)
-                            )
-                        )
-                    )
+                            ) ; END: if: cv
+                        ) ; END: foreach: view type
+                    ) ; END: foreach: cell
                 else
                     warn("Library '%s' not found in srcLibs -- skipping\n" lib)
                 )
@@ -219,80 +226,80 @@ procedure(CCSreplaceLibRefs(libMap srcLibs viewList @optional (dryRun t))
 
         list(?opened totalOpened ?changed totalChanged ?failed totalFailed
                   ?skipped totalSkipped ?missingLibs missingLibs)
-    )
-)
+    ) ; END: let: Main function
+) ; END: CCSreplaceLibRefs
 
 
 procedure(CCSRunReplaceLibRefs()
-        let((libMap srcLibs viewList)
+    let((libMap srcLibs viewList)
 
-                ; USER: Edit for *old name* vs *new name*
-    libMap = makeTable("libMap" nil)
-    libMap["cgnd"] = "cgnd_revc"
-    libMap["vbb"] = "vbb_revc"
-    libMap["vbbsa"] = "vbbsa_revc"
-    libMap["vbleq_0"] = "vbleq_0_revc"
-    libMap["vbleq_1"] = "vbleq_1_revc"
-    libMap["vcc"] = "vcc_revc"
-    libMap["vccckt"] = "vccckt_revc"
-    libMap["vccdll"] = "vccdll_revc"
-    libMap["vccdllc"] = "vccdllc_revc"
-    libMap["vcsa"] = "vcsa_revc"
-    libMap["vdd"] = "vdd_revc"
-    libMap["vdda"] = "vdda_revc"
-    libMap["vddl"] = "vddl_revc"
-    libMap["vddq"] = "vddq_revc"
-    libMap["vdin"] = "vdin_revc"
-    libMap["vdin_dq"] = "vdin_dq_revc"
-    libMap["vkk"] = "vkk_revc"
-    libMap["vod"] = "vod_revc"
-    libMap["vpl"] = "vpl_revc"
-    libMap["vpp"] = "vpp_revc"
-    libMap["vsin"] = "vsin_revc"
-    libMap["vsin_dq"] = "vsin_dq_revc"
-    libMap["vss"] = "vss_revc"
-    libMap["vssckt"] = "vssckt_revc"
-    libMap["vssdll"] = "vssdll_revc"
-    libMap["vssdllc"] = "vssdllc_revc"
-    libMap["vssl"] = "vssl_revc"
-    libMap["xvdd"] = "xvdd_revc"
-    libMap["xvddl"] = "xvddl_revc"
-    libMap["xvddq"] = "xvddq_revc"
-    libMap["xvss"] = "xvss_revc"
-    libMap["xvssl"] = "xvssl_revc"
+        ; USER: Edit for *old name* vs *new name*
+        libMap = makeTable("libMap" nil)
+        libMap["cgnd"] = "cgnd_revc"
+        libMap["vbb"] = "vbb_revc"
+        libMap["vbbsa"] = "vbbsa_revc"
+        libMap["vbleq_0"] = "vbleq_0_revc"
+        libMap["vbleq_1"] = "vbleq_1_revc"
+        libMap["vcc"] = "vcc_revc"
+        libMap["vccckt"] = "vccckt_revc"
+        libMap["vccdll"] = "vccdll_revc"
+        libMap["vccdllc"] = "vccdllc_revc"
+        libMap["vcsa"] = "vcsa_revc"
+        libMap["vdd"] = "vdd_revc"
+        libMap["vdda"] = "vdda_revc"
+        libMap["vddl"] = "vddl_revc"
+        libMap["vddq"] = "vddq_revc"
+        libMap["vdin"] = "vdin_revc"
+        libMap["vdin_dq"] = "vdin_dq_revc"
+        libMap["vkk"] = "vkk_revc"
+        libMap["vod"] = "vod_revc"
+        libMap["vpl"] = "vpl_revc"
+        libMap["vpp"] = "vpp_revc"
+        libMap["vsin"] = "vsin_revc"
+        libMap["vsin_dq"] = "vsin_dq_revc"
+        libMap["vss"] = "vss_revc"
+        libMap["vssckt"] = "vssckt_revc"
+        libMap["vssdll"] = "vssdll_revc"
+        libMap["vssdllc"] = "vssdllc_revc"
+        libMap["vssl"] = "vssl_revc"
+        libMap["xvdd"] = "xvdd_revc"
+        libMap["xvddl"] = "xvddl_revc"
+        libMap["xvddq"] = "xvddq_revc"
+        libMap["xvss"] = "xvss_revc"
+        libMap["xvssl"] = "xvssl_revc"
 
-    ; USER: Edit for libraries to look at.
-    ;srcLibs  = list( "vbb_revc" )   ;; libraries to scan cells in
-    ;srcLibs  = list( "vbbsa_revc" )   ;; libraries to scan cells in
-    ;srcLibs  = list( "vbleq_0_revc" )   ;; libraries to scan cells in
-    ;srcLibs  = list( "vccckt_revc" )   ;; libraries to scan cells in
-    srcLibs  = list( "vccdll_revc" )   ;; libraries to scan cells in
-    ;srcLibs  = list(
-    ;	"cgnd_revc"
-    ;	"vbb_revc" "vbbsa_revc" "vbleq_0_revc" "vbleq_1_revc"
-    ;	"vcc_revc" "vccckt_revc" "vccdll_revc" "vccdllc_revc"
-    ;	"vcsa_revc"
-    ;	"vdd_revc" "vdda_revc" "vddl_revc" "vddq_revc" "vdin_revc" "vdin_dq_revc"
-    ;	"vkk_revc" "vod_revc" "vpl_revc" "vpp_revc" "vsin_revc"
-    ;	"vsin_dq_revc" "vss_revc" "vssckt_revc" "vssdll_revc" "vssdllc_revc" "vssl_revc" "xvdd_revc"
-    ;	"xvddl_revc" "xvddq_revc"
-    ;	"xvss_revc" "xvssl_revc"
-    ;)   ;; libraries to scan cells in
+        ; USER: Edit for libraries to look at.
+        ;srcLibs  = list( "vbb_revc" )   ;; libraries to scan cells in
+        ;srcLibs  = list( "vbbsa_revc" )   ;; libraries to scan cells in
+        ;srcLibs  = list( "vbleq_0_revc" )   ;; libraries to scan cells in
+        ;srcLibs  = list( "vccckt_revc" )   ;; libraries to scan cells in
+        srcLibs  = list( "vccdll_revc" )   ;; libraries to scan cells in
+        ;srcLibs  = list(
+        ;	"cgnd_revc"
+        ;	"vbb_revc" "vbbsa_revc" "vbleq_0_revc" "vbleq_1_revc"
+        ;	"vcc_revc" "vccckt_revc" "vccdll_revc" "vccdllc_revc"
+        ;	"vcsa_revc"
+        ;	"vdd_revc" "vdda_revc" "vddl_revc" "vddq_revc" "vdin_revc" "vdin_dq_revc"
+        ;	"vkk_revc" "vod_revc" "vpl_revc" "vpp_revc" "vsin_revc"
+        ;	"vsin_dq_revc" "vss_revc" "vssckt_revc" "vssdll_revc" "vssdllc_revc" "vssl_revc" "xvdd_revc"
+        ;	"xvddl_revc" "xvddq_revc"
+        ;	"xvss_revc" "xvssl_revc"
+        ;)   ;; libraries to scan cells in
 
 
-    ; USER: Edit for specific cell view type.
-    viewList = list("layout")
-    ;viewList = list("schematic")
-    ;viewList = list("layout" "schematic")
+        ; USER: Edit for specific cell view type.
+        viewList = list("layout")
+        ;viewList = list("schematic")
+        ;viewList = list("layout" "schematic")
 
-    ; USER: dry run and execute can both run in the same pass --
-    ; dry run opens read-only and holds no write lock.
-    ;; Step 1: dry run, just review the printed report
-    CCSreplaceLibRefs(libMap srcLibs viewList t)
+        ; USER: dry run and execute can both run in the same pass --
+        ; dry run opens read-only and holds no write lock.
+        ;; Step 1: dry run, just review the printed report
+        CCSreplaceLibRefs(libMap srcLibs viewList t)
 
-    ;; Step 2: once you're satisfied, execute for real
-    CCSreplaceLibRefs(libMap srcLibs viewList nil)
-        ) ; let
+        ;; Step 2: once you're satisfied, execute for real
+        CCSreplaceLibRefs(libMap srcLibs viewList nil)
+    ) ; let
 ) ; procedure CCSRunReplaceLibRefs: Selecting which
 
 
