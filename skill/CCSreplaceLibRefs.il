@@ -15,10 +15,9 @@
 ;; dryRun  : t = report only, no changes saved
 ;;           nil = actually reassign + dbSave
 ;;
-;; NOTES / UNVERIFIED ITEMS
+;; NOTES
 ;;  1. dbOpenCellViewByType(...) mode string "a" is used to open for
-;;     edit without erasing the view. Testing so far has not shown
-;;     data loss, but keep an eye on this on new library types.
+;;     edit without erasing the view.
 ;;  2. Can't directly assign `instHeader~>libName = newLib`. Must use
 ;;     `dbSetInstHeaderMasterName(instHeader newLib nil nil)`.
 ;;  3. Pcell instances are NOT special-cased -- they'll go through
@@ -40,13 +39,16 @@
 ;;
 ;; USAGE
 ;; - Rename to new library in `cds.lib`. Modify `srcLibs` for the new
-;;   library name to scan. The new (target) libraries must already
+;;   library name(s) to scan. The new (target) libraries must already
 ;;   exist in `cds.lib` -- the preflight check below will abort an
 ;;   execute run (not a dry run) if any target library is missing.
 ;; - Modify `libMap` table for *old libName* to *new libName*.
 ;; - Both a dry run and an execute run can be left uncommented in
 ;;   CCSRunReplaceLibRefs -- dry run opens read-only and holds no
 ;;   write lock, so it's safe to run immediately before the real one.
+;; - Test with Cadence cds.lib `ASSIGN .. COMBINE ..` still works to modify
+;;   libraries that's part of the `COMBINE`. Don't need to remove the COMBINE
+;;   before renaming.
 ;;
 ;;
 ;; ============================================================================
@@ -74,6 +76,10 @@
 ;;   cellLabel/oldLibLabel into locals before the call and prints those
 ;;   instead of touching instHeader afterward.
 ;; - Change indentation from 2 -> 4 spaces.
+;;
+;; 2026/08/31 - dpeng
+;; - Verified working with Cadence cds.lib's `ASSIGN .. COMBINE ..` command.
+;;
 ;;
 ;; ============================================================================
 
@@ -271,20 +277,18 @@ procedure(CCSRunReplaceLibRefs()
         ; USER: Edit for libraries to look at.
         ;srcLibs  = list( "vbb_revc" )   ;; libraries to scan cells in
         ;srcLibs  = list( "vbbsa_revc" )   ;; libraries to scan cells in
-        ;srcLibs  = list( "vbleq_0_revc" )   ;; libraries to scan cells in
-        ;srcLibs  = list( "vccckt_revc" )   ;; libraries to scan cells in
-        srcLibs  = list( "vccdll_revc" )   ;; libraries to scan cells in
-        ;srcLibs  = list(
-        ;	"cgnd_revc"
-        ;	"vbb_revc" "vbbsa_revc" "vbleq_0_revc" "vbleq_1_revc"
-        ;	"vcc_revc" "vccckt_revc" "vccdll_revc" "vccdllc_revc"
-        ;	"vcsa_revc"
-        ;	"vdd_revc" "vdda_revc" "vddl_revc" "vddq_revc" "vdin_revc" "vdin_dq_revc"
-        ;	"vkk_revc" "vod_revc" "vpl_revc" "vpp_revc" "vsin_revc"
-        ;	"vsin_dq_revc" "vss_revc" "vssckt_revc" "vssdll_revc" "vssdllc_revc" "vssl_revc" "xvdd_revc"
-        ;	"xvddl_revc" "xvddq_revc"
-        ;	"xvss_revc" "xvssl_revc"
-        ;)   ;; libraries to scan cells in
+
+        srcLibs  = list(
+        	"cgnd_revc"
+        	"vbb_revc" "vbbsa_revc" "vbleq_0_revc" "vbleq_1_revc"
+        	"vcc_revc" "vccckt_revc" "vccdll_revc" "vccdllc_revc"
+        	"vcsa_revc"
+        	"vdd_revc" "vdda_revc" "vddl_revc" "vddq_revc" "vdin_revc" "vdin_dq_revc"
+        	"vkk_revc" "vod_revc" "vpl_revc" "vpp_revc" "vsin_revc"
+        	"vsin_dq_revc" "vss_revc" "vssckt_revc" "vssdll_revc" "vssdllc_revc" "vssl_revc" "xvdd_revc"
+        	"xvddl_revc" "xvddq_revc"
+        	"xvss_revc" "xvssl_revc"
+        )   ;; libraries to scan cells in
 
 
         ; USER: Edit for specific cell view type.
