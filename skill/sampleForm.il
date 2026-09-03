@@ -15,6 +15,7 @@
 ; HISTORY
 ; 2026/09/03 - dpeng
 ; - Initial creation using Claude as reference.
+; - Modify so myFormResults is a "table" so can use hash.
 ;
 ;
 ; ===========================================================================
@@ -49,13 +50,19 @@ procedure( myFormCallback(form)
         theCruise = form->myCruiseField->value
 
         ; Store everything in one list so it's easy to inspect/reuse later.
-        myFormResults = list(
-            nil ; placeholder tag, replace with 'results if you want a tagged list
-            "string"  theString
-            "boolean" theBool
-            "fruit"   theFruit
-            "cruise"  theCruise
-        )
+        ;myFormResults = list(
+        ;    nil ; placeholder tag, replace with 'results if you want a tagged list
+        ;    "string"  theString
+        ;    "boolean" theBool
+        ;    "fruit"   theFruit
+        ;    "cruise"  theCruise
+        ;)
+        ; Store everything as one table so it's easy to inspect/reuse later.
+        myFormResults = makeTable("myFormResults)" nil)
+        myFormResults["string"] = theString
+        myFormResults["boolean"] = theBool
+        myFormResults["fruit"] = theFruit
+        myFormResults["cruise"] = theCruise
 
         ; Print to CIW for immediate visual feedback while learning.
         printf("---- Form values ----\n")
@@ -64,7 +71,7 @@ procedure( myFormCallback(form)
         printf("Fruit field  : %s\n" theFruit)
         printf("Cruise field : %s\n" theCruise)
         printf("----------------------\n")
-        printf("Also stored in global variable: myFormResults\n")
+        printf("Also stored in global variable (type:%s): myFormResults\n", type(myFormResults))
     ) ; let
 ) ; procedure myFormCallback
 
